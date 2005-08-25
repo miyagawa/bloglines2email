@@ -4,7 +4,6 @@ use Digest::SHA1 qw(sha1_hex);
 use Encode;
 use FindBin;
 use File::Spec;
-use lib "/home/miyagawa/svn/monster/WebService-Bloglines/lib";
 use MIME::Lite;
 use Template;
 use WebService::Bloglines;
