@@ -47,30 +47,16 @@ sub send_one_email {
         Type => 'text/html; charset=utf-8',
         Data => encode("utf-8", $body),
     );
-    $msg->send("smtp", "monster.bulknews.net:10025", Timeout => 60)
-}
-
-sub hack_image {
-    ## this will break someday
-    my $feed = shift;
-    my $image = $feed->{image} or return;
-    my @stuff = grep length, map { s/^\s+//; $_ } split /\n/, $image;
-    return {
-        src  => $stuff[0],
-        href => $stuff[1],
-        alt  => $stuff[2],
-    };
+    $msg->send("smtp", "localhost", Timeout => 60)
 }
 
 sub format_body {
     my($feed, $item) = @_;
-    my $image = hack_image($feed);
     my $template = get_template();
     my $tt = Template->new;
     $tt->process(\$template, {
         feed => $feed,
         item => $item,
-        image => $image,
     }, \my $out);
     $out;
 }
@@ -78,7 +64,7 @@ sub format_body {
 sub get_template {
     return <<'HTML';
 <div>
-[% IF image %]<div style="float:right"><a href="[% image.href %]"><img style="border:0" src="[% image.src | html %]" alt="[% image.alt | html %]" /></a></div>[% END %]
+[% IF feed.image %]<div style="float:right"><a href="[% feed.image.link %]"><img style="border:0" src="[% feed.image.url | html %]" alt="[% feed.image.title | html %]" /></a></div>[% END %]
 <div>Link: <a href="[% item.link | html %]">[% item.link | html %]</a></div>
 <div style="clear:both"></div>
 <div style="font-size:0.8em">[% IF item.creator %]by [% item.creator | html %][% END %][% IF item.dc.subject %] on [% item.dc.subject %][% END %]</div>
