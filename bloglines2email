@@ -1,0 +1,88 @@
+#!/usr/local/bin/perl -w
+use strict;
+use Digest::SHA1 qw(sha1_hex);
+use Encode;
+use FindBin;
+use File::Spec;
+use lib "/home/miyagawa/svn/monster/WebService-Bloglines/lib";
+use MIME::Lite;
+use Template;
+use WebService::Bloglines;
+use YAML;
+
+my $conf = File::Spec->catfile($FindBin::Bin, "bloglines2email.conf");
+my $cfg  = YAML::LoadFile($conf);
+
+my $bws = WebService::Bloglines->new(
+    username => $cfg->{username},
+    password => $cfg->{password},
+);
+
+my @updates = $bws->getitems(0, 1);
+for my $update (@updates) {
+    send_email($cfg, $update);
+}
+
+sub send_email {
+    my($cfg, $update) = @_;
+    my $feed  = $update->feed;
+    my @items = $update->items;
+    for my $item (@items) {
+        send_one_email($cfg, $feed, $item);
+    }
+}
+
+sub send_one_email {
+    my($cfg, $feed, $item) = @_;
+    my $feed_title = $feed->{title};
+       $feed_title =~ tr/,/;/;
+    my $msg = MIME::Lite->new(
+        From => encode('MIME-Header', "$feed_title <$cfg->{mailfrom}>"),
+        To   => $cfg->{mailto},
+        Subject => encode('MIME-Header', $item->{title}),
+        Type => 'multipart/related',
+    );
+    my $body  = format_body($feed, $item);
+    $msg->attach(
+        Type => 'text/html; charset=utf-8',
+        Data => encode("utf-8", $body),
+    );
+    $msg->send("smtp", "monster.bulknews.net:10025", Timeout => 60)
+}
+
+sub hack_image {
+    ## this will break someday
+    my $feed = shift;
+    my $image = $feed->{image} or return;
+    my @stuff = grep length, map { s/^\s+//; $_ } split /\n/, $image;
+    return {
+        src  => $stuff[0],
+        href => $stuff[1],
+        alt  => $stuff[2],
+    };
+}
+
+sub format_body {
+    my($feed, $item) = @_;
+    my $image = hack_image($feed);
+    my $template = get_template();
+    my $tt = Template->new;
+    $tt->process(\$template, {
+        feed => $feed,
+        item => $item,
+        image => $image,
+    }, \my $out);
+    $out;
+}
+
+sub get_template {
+    return <<'HTML';
+<div>
+[% IF image %]<div style="float:right"><a href="[% image.href %]"><img style="border:0" src="[% image.src | html %]" alt="[% image.alt | html %]" /></a></div>[% END %]
+<div>Link: <a href="[% item.link | html %]">[% item.link | html %]</a></div>
+<div style="clear:both"></div>
+<div style="font-size:0.8em">[% IF item.creator %]by [% item.creator | html %][% END %][% IF item.dc.subject %] on [% item.dc.subject %][% END %]</div>
+<div style="padding: 1.2em">[% item.description %]</div>
+<div style="font-size:0.8em">[% IF item.pubDate %]Posted on [% item.pubDate %][% END %] | <a href="[% item.link | html %]">permalink</a> | <a href="[% feed.link | html %]">[% feed.title | html %]</a></div>
+HTML
+}
