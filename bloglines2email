@@ -1,13 +1,17 @@
 #!/usr/local/bin/perl -w
 use strict;
-use Digest::SHA1 qw(sha1_hex);
 use Encode;
 use FindBin;
 use File::Spec;
+use Getopt::Long;
 use MIME::Lite;
 use Template;
 use WebService::Bloglines;
 use YAML;
+
+our $VERSION = '0.01';
+
+GetOptions("test", \my $testmode);
 
 my $conf = File::Spec->catfile($FindBin::Bin, "bloglines2email.conf");
 my $cfg  = YAML::LoadFile($conf);
@@ -17,7 +21,8 @@ my $bws = WebService::Bloglines->new(
     password => $cfg->{password},
 );
 
-my @updates = $bws->getitems(0, 1);
+my $mark_read = $testmode ? 0 : 1;
+my @updates = $bws->getitems(0, $mark_read);
 for my $update (@updates) {
     send_email($cfg, $update);
 }
@@ -36,7 +41,7 @@ sub send_one_email {
     my $feed_title = $feed->{title};
        $feed_title =~ tr/,/;/;
     my $msg = MIME::Lite->new(
-        From => encode('MIME-Header', "$feed_title <$cfg->{mailfrom}>"),
+        From => encode('MIME-Header', qq("$feed_title" <$cfg->{mailfrom}>)),
         To   => $cfg->{mailto},
         Subject => encode('MIME-Header', $item->{title}),
         Type => 'multipart/related',
@@ -64,10 +69,11 @@ sub get_template {
     return <<'HTML';
 <div>
 [% IF feed.image %]<div style="float:right"><a href="[% feed.image.link %]"><img style="border:0" src="[% feed.image.url | html %]" alt="[% feed.image.title | html %]" /></a></div>[% END %]
-<div>Link: <a href="[% item.link | html %]">[% item.link | html %]</a></div>
+<div>Link: <a href="[% item.link | html %]">[% item.link | html %]</a><br />
+[% IF item.dc.creator %]by [% item.dc.creator | html %][% END %][% IF item.dc.subject %] on [% item.dc.subject %][% END %]</div>
 <div style="clear:both"></div>
-<div style="font-size:0.8em">[% IF item.creator %]by [% item.creator | html %][% END %][% IF item.dc.subject %] on [% item.dc.subject %][% END %]</div>
-<div style="padding: 1.2em">[% item.description %]</div>
+<div style="padding: 1em 0">[% item.description %]</div>
 <div style="font-size:0.8em">[% IF item.pubDate %]Posted on [% item.pubDate %][% END %] | <a href="[% item.link | html %]">permalink</a> | <a href="[% feed.link | html %]">[% feed.title | html %]</a></div>
+</div>
 HTML
 }
