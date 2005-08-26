@@ -77,3 +77,16 @@ sub get_template {
 </div>
 HTML
 }
+
+=head1 NAME
+
+bloglines2email - Send Bloglines unread items as HTML mail
+
+=head1 AUTHOR
+
+Tatsuhiko Miyagawa E<lt>miyagawa@bulknews.netE<gt>
+
+This script is free software and licensed under the same terms as Perl
+(Artistic/GPL).
+
+=cut
