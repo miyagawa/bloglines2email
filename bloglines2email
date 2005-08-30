@@ -11,7 +11,7 @@ use YAML;
 
 our $VERSION = '0.01';
 
-GetOptions("test", \my $testmode);
+GetOptions(\our %opt, "test", "verbose");
 
 my $conf = File::Spec->catfile($FindBin::Bin, "bloglines2email.conf");
 my $cfg  = YAML::LoadFile($conf);
@@ -21,32 +21,58 @@ my $bws = WebService::Bloglines->new(
     password => $cfg->{password},
 );
 
-my $mark_read = $testmode ? 0 : 1;
+my $mark_read = $opt{test} ? 0 : 1;
 my @updates = $bws->getitems(0, $mark_read);
+debug(scalar(@updates) . " feeds updated.");
 for my $update (@updates) {
     send_email($cfg, $update);
+}
+
+sub debug {
+    my $msg = "@_";
+    chomp($msg);
+    print STDERR encode('utf-8', "$msg\n") if $opt{verbose};
 }
 
 sub send_email {
     my($cfg, $update) = @_;
     my $feed  = $update->feed;
     my @items = $update->items;
-    for my $item (@items) {
-        send_one_email($cfg, $feed, $item);
+    if ($cfg->{'group-items'}) {
+        send_email_feed($cfg, $feed, \@items);
+    }
+    else {
+        for my $item (@items) {
+            send_email_item($cfg, $feed, $item);
+        }
     }
 }
 
-sub send_one_email {
+sub send_email_feed {
+    my($cfg, $feed, $items) = @_;
+    my $subject = $feed->{title} || '(no-title)';
+    my $body = join '<hr />', map format_body($feed, $_, $cfg), @$items;
+    do_send_mail($cfg, $feed, $subject, $body);
+}
+
+sub send_email_item {
     my($cfg, $feed, $item) = @_;
+    my $subject = $item->{title} || '(no-title)';
+    my $body    = format_body($feed, $item, $cfg);
+    do_send_email($cfg, $feed, $subject, $body);
+}
+
+sub do_send_mail {
+    my($cfg, $feed, $subject, $body) = @_;
+    debug("Sending $subject to $cfg->{mailto}");
     my $feed_title = $feed->{title};
-       $feed_title =~ tr/,/;/;
+       $feed_title =~ tr/,//d;
     my $msg = MIME::Lite->new(
         From => encode('MIME-Header', qq("$feed_title" <$cfg->{mailfrom}>)),
         To   => $cfg->{mailto},
-        Subject => encode('MIME-Header', $item->{title}),
+        Subject => encode('MIME-Header', $subject),
         Type => 'multipart/related',
     );
-    my $body  = format_body($feed, $item);
     $msg->attach(
         Type => 'text/html; charset=utf-8',
         Data => encode("utf-8", $body),
@@ -55,12 +81,13 @@ sub send_one_email {
 }
 
 sub format_body {
-    my($feed, $item) = @_;
+    my($feed, $item, $cfg) = @_;
     my $template = get_template();
     my $tt = Template->new;
     $tt->process(\$template, {
         feed => $feed,
         item => $item,
+        cfg  => $cfg,
     }, \my $out);
     $out;
 }
@@ -68,6 +95,7 @@ sub format_body {
 sub get_template {
     return <<'HTML';
 <div>
+[% var = 'group-items'; IF cfg.$var %]<h2 style="font-size: 1em">[% item.title | html %]</h2>[% END %]
 [% IF feed.image %]<div style="float:right"><a href="[% feed.image.link %]"><img style="border:0" src="[% feed.image.url | html %]" alt="[% feed.image.title | html %]" /></a></div>[% END %]
 <div>Link: <a href="[% item.link | html %]">[% item.link | html %]</a><br />
 [% IF item.dc.creator %]by [% item.dc.creator | html %][% END %][% IF item.dc.subject %] on [% item.dc.subject %][% END %]</div>
