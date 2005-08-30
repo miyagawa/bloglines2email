@@ -95,7 +95,7 @@ sub format_body {
 sub get_template {
     return <<'HTML';
 <div>
-[% var = 'group-items'; IF cfg.$var %]<h2 style="font-size: 1em">[% item.title | html %]</h2>[% END %]
+[% var = 'group-items'; IF cfg.$var %]<h2 style="font-size: 1.2em; margin: 0">[% item.title | html %]</h2>[% END %]
 [% IF feed.image %]<div style="float:right"><a href="[% feed.image.link %]"><img style="border:0" src="[% feed.image.url | html %]" alt="[% feed.image.title | html %]" /></a></div>[% END %]
 <div>Link: <a href="[% item.link | html %]">[% item.link | html %]</a><br />
 [% IF item.dc.creator %]by [% item.dc.creator | html %][% END %][% IF item.dc.subject %] on [% item.dc.subject %][% END %]</div>
