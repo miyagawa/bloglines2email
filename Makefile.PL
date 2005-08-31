@@ -7,6 +7,8 @@ WriteMakefile(
         MIME::Lite => 0,
         Template => 0,
         YAML => 0,
+        DateTime::Format::Mail => 0,
+        DateTime => 0,
     },
     EXE_FILES => [ 'bloglines' ],
 );

@@ -13,9 +13,9 @@ use YAML;
 
 our $VERSION = '0.01';
 
-GetOptions(\our %opt, "test", "verbose");
+GetOptions(\our %opt, "test", "verbose", "conf=s");
 
-my $conf = File::Spec->catfile($FindBin::Bin, "bloglines2email.conf");
+my $conf = $opt{conf} || File::Spec->catfile($FindBin::Bin, "bloglines2email.conf");
 my $cfg  = YAML::LoadFile($conf);
 
 my $bws = WebService::Bloglines->new(
