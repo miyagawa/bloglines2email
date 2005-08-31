@@ -100,7 +100,7 @@ sub get_template {
 <div>Link: <a href="[% item.link | html %]">[% item.link | html %]</a><br />
 [% IF item.dc.creator %]by [% item.dc.creator | html %][% END %][% IF item.dc.subject %] on [% item.dc.subject %][% END %]</div>
 <div style="clear:both"></div>
-<div style="padding: 1em 0">[% item.description %]</div>
+<div[% UNLESS item.description.match('(?i)^<p[ >]') %] style="padding: 1em 0"[% END %]>[% item.description %]</div>
 <div style="font-size:0.8em">[% IF item.pubDate %]Posted on [% item.pubDate %][% END %] | <a href="[% item.link | html %]">permalink</a> | <a href="[% feed.link | html %]">[% feed.title | html %]</a></div>
 </div>
 HTML
