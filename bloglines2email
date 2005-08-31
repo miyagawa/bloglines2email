@@ -1,5 +1,7 @@
 #!/usr/local/bin/perl -w
 use strict;
+use DateTime;
+use DateTime::Format::Mail;
 use Encode;
 use FindBin;
 use File::Spec;
@@ -68,6 +70,7 @@ sub do_send_mail {
     my $feed_title = $feed->{title};
        $feed_title =~ tr/,//d;
     my $msg = MIME::Lite->new(
+        Date => get_rfc2822_date($cfg),
         From => encode('MIME-Header', qq("$feed_title" <$cfg->{mailfrom}>)),
         To   => $cfg->{mailto},
         Subject => encode('MIME-Header', $subject),
@@ -80,6 +83,16 @@ sub do_send_mail {
     $msg->send("smtp", "localhost", Timeout => 60)
 }
 
+sub get_rfc2822_date {
+    my $cfg = shift;
+    my $dt  = @_
+        ? DateTime::Format::Mail->parse_datetime($_[0])
+        : DateTime->now;
+    my $tz = $cfg->{'date-timezone'} || 'local';
+    $dt->set_time_zone($tz);
+    DateTime::Format::Mail->format_datetime($dt);
+}
+
 sub format_body {
     my($feed, $item, $cfg) = @_;
     my $template = get_template();
@@ -88,6 +101,7 @@ sub format_body {
         feed => $feed,
         item => $item,
         cfg  => $cfg,
+        get_rfc2822_date => sub { get_rfc2822_date($cfg, @_) },
     }, \my $out);
     $out;
 }
@@ -101,7 +115,7 @@ sub get_template {
 [% IF item.dc.creator %]by [% item.dc.creator | html %][% END %][% IF item.dc.subject %] on [% item.dc.subject %][% END %]</div>
 <div style="clear:both"></div>
 <div[% UNLESS item.description.match('(?i)^<p[ >]') %] style="padding: 1em 0"[% END %]>[% item.description %]</div>
-<div style="font-size:0.8em">[% IF item.pubDate %]Posted on [% item.pubDate %][% END %] | <a href="[% item.link | html %]">permalink</a> | <a href="[% feed.link | html %]">[% feed.title | html %]</a></div>
+<div style="font-size:0.8em">[% IF item.pubDate %]Posted on [% get_rfc2822_date(item.pubDate) %][% END %] | <a href="[% item.link | html %]">permalink</a> | <a href="[% feed.link | html %]">[% feed.title | html %]</a></div>
 </div>
 HTML
 }
