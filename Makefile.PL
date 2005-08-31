@@ -10,5 +10,5 @@ WriteMakefile(
         DateTime::Format::Mail => 0,
         DateTime => 0,
     },
-    EXE_FILES => [ 'bloglines' ],
+    EXE_FILES => [ 'bloglines2email' ],
 );
