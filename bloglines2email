@@ -109,11 +109,11 @@ sub format_body {
 sub get_template {
     return <<'HTML';
 <div>
-[% var = 'group-items'; IF cfg.$var %]<h2 style="font-size: 1.2em; margin: 0">[% item.title | html %]</h2>[% END %]
-[% IF feed.image %]<div style="float:right"><a href="[% feed.image.link %]"><img style="border:0" src="[% feed.image.url | html %]" alt="[% feed.image.title | html %]" /></a></div>[% END %]
-<div>Link: <a href="[% item.link | html %]">[% item.link | html %]</a><br />
+<div>
+[% IF feed.image %]<a href="[% feed.image.link %]"><img style="border:0" align="right" src="[% feed.image.url | html %]" alt="[% feed.image.title | html %]" /></a>[% END %]
+[% var = 'group-items'; IF cfg.$var %]<strong style="font-weight:bold;font-size:1.2em">[% item.title | html %]</strong><br />[% END %]
+Link: <a href="[% item.link | html %]">[% item.link | html %]</a><br />
 [% IF item.dc.creator %]by [% item.dc.creator | html %][% END %][% IF item.dc.subject %] on [% item.dc.subject %][% END %]</div>
-<div style="clear:both"></div>
 <div[% UNLESS item.description.match('(?i)^<p[ >]') %] style="padding: 1em 0"[% END %]>[% item.description %]</div>
 <div style="font-size:0.8em">[% IF item.pubDate %]Posted on [% get_rfc2822_date(item.pubDate) %][% END %] | <a href="[% item.link | html %]">permalink</a> | <a href="[% feed.link | html %]">[% feed.title | html %]</a></div>
 </div>
