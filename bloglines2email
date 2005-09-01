@@ -115,8 +115,10 @@ sub get_template {
 [% SET link = item.link || item.guid -%]
 Link: <a href="[% link | html %]">[% link | html %]</a><br />
 [% IF item.dc.creator %]by [% item.dc.creator | html %][% END %][% IF item.dc.subject %] on [% item.dc.subject %][% END %]</div>
-<div[% UNLESS item.description.match('(?i)^<p[ >]') %] style="padding: 1em 0"[% END %]>[% item.description %]</div>
-<div style="font-size:0.8em">[% IF item.pubDate %]Posted on [% get_rfc2822_date(item.pubDate) %][% END %] | <a href="[% link | html %]">permalink</a> | <a href="[% feed.link | html %]">[% feed.title | html %]</a></div>
+[% IF item.description -%]
+[% IF item.description.match('(?i)^<p[ >]') %][% item.description %][% ELSE %]<div style="padding: 1em 0">[% item.description %]</div>[% END %]
+[%- END %]
+<div style="font-size:0.8em">[% IF item.pubDate %]Posted on [% get_rfc2822_date(item.pubDate) %][% END %] | <a href="[% link | html %]">permalink</a> | <a href="[% feed.link | html %]">[% feed.title | html %]</a><br clear="all" /></div>
 </div>
 HTML
 }
