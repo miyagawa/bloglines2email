@@ -1,0 +1,12 @@
+A version history for bloglines2email
+
+0.10  Thu Sep  8 20:15:53 UTC 2005
+        * Added 'group-items' config for packing entries per feed in a single email
+        - Tweaked design for Gmail
+        * Added 'date-timezone' config to change timezone of email
+        * Added 'Post to del.icio.us' option with delicious-username config
+        - Misc bug fixes for items entity handling
+        * Added 'mailroute' config to specify SMTP or sendmail
+
+0.01  2005-08-26 06:17:07 UTC
+        * First version

@@ -1,4 +1,5 @@
 #!/usr/local/bin/perl -w
+# $Id$
 use strict;
 use DateTime;
 use DateTime::Format::Mail;
@@ -11,7 +12,7 @@ use Template;
 use WebService::Bloglines;
 use YAML;
 
-our $VERSION = '0.01';
+our $VERSION = '0.10';
 
 GetOptions(\our %opt, "test", "verbose", "conf=s");
 
@@ -23,11 +24,20 @@ my $bws = WebService::Bloglines->new(
     password => $cfg->{password},
 );
 
+setup_mailroute($cfg);
+
 my $mark_read = $opt{test} ? 0 : 1;
 my @updates = $bws->getitems(0, $mark_read);
 debug(scalar(@updates) . " feeds updated.");
 for my $update (@updates) {
     send_email($cfg, $update);
+}
+
+sub setup_mailroute {
+    my $cfg = shift;
+    my $route = $cfg->{mailroute} || { via => 'smtp', host => 'localhost' };
+    my @args  = $route->{host} ? ($route->{host}) : ();
+    MIME::Lite->send($route->{via}, @args);
 }
 
 sub debug {
@@ -126,6 +136,119 @@ HTML
 =head1 NAME
 
 bloglines2email - Send Bloglines unread items as HTML mail
+
+=head1 SYNOPSIS
+
+  % bloglines2email
+  % bloglines2email --conf=/path/to/bloglines2email.conf --test --verbose
+
+=head1 DESCRIPTION
+
+C<bloglines2email> is a command line application that fetches
+Bloglines unread items via Bloglines Web Services and sends them as
+HTML mail to your address (Gmail is preferrable). It gives you an easy
+way to manage, browse and search Blog entries rather than using
+Bloglines interface directly.
+
+You'd better run this app by crontab like every 5 minutes.
+
+=head1 REQUIREMENT
+
+This app requires perl 5.8.0 with following Perl modules installed on your box.
+
+=over 4
+
+=item DateTime
+
+=item DateTime::Format::Mail
+
+=item MIME::Lite
+
+=item Template
+
+=item WebService::Bloglines
+
+=item YAML
+
+=back
+
+=head1 OPTIONS
+
+This application has following command line options.
+
+=over 4
+
+=item --test
+
+Doesn't mark unread items as read. Default: mark read.
+
+=item --verbose
+
+Gives diagnostic messages to STDERR. Default: no verbose.
+
+=item --conf
+
+Specifies a path of configuration YAML file. Default:
+C<bloglines2email.conf> in the same directory as script.
+
+=back
+
+=head1 CONFIGURATION
+
+This app uses C<bloglines2email.conf> that sits beside the script in
+the same directory (or you can specify the file path using C<--conf>
+option). The distribution has a sample configuration file named
+C<bloglines2email.conf.sample> that you can use by copying.
+
+The config file uses YAML syntax and most of the directives are self-discriptive.
+
+=over 4
+
+=item username, password
+
+Set your username and password for Bloglines.
+
+=item mailto
+
+Set email address that this app sends emails to. Gmail address is recommended.
+
+=item mailfrom
+
+Set email address that this app uses for C<From:> header.
+
+=item mailroute
+
+Set how to send emails. Default is to use SMTP.
+
+=item group-items (Optional)
+
+With this directive on (set to 1), C<bloglines2email> groups updated
+items per feed. That reduces a volume of emails sent, and enables a
+better user experience with Gmail, thanks to the conversation
+threading based on C<Subject> header. Strongly recommended.
+
+=item date-timezone (Optional)
+
+Sets Date timezone for outgoing email C<Date:> header and I<Posted on>
+phrase inside email body. Default is to use local timezone on your machine.
+
+=item delicious-username (Optional)
+
+Sets your del.icio.us username. With this option set, the email body
+will have I<Post to del.icio.us> link, which is a handy shortcut for
+bookmarking items to the social bookmarking service.
+
+=head1 DEVELOPMENT
+
+The newest version is always available via subversion:
+
+  svn://svn.bulknews.net/public/bloglines2email/trunk
+
+And you can browse the files via ViewCVS at:
+
+  http://svn.bulknews.net/viewcvs/public/bloglines2email/trunk
+
+Feel free to send patches or suggestions to E<lt>miyagawa@bulknews.netE<gt>
 
 =head1 AUTHOR
 

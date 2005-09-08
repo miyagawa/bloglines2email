@@ -2,6 +2,11 @@ username: your-username@bloglines
 password: your-password
 mailto: mail-address@example.com
 mailfrom: mail-address@example.com
+mailroute:
+  via:  smtp
+  host: localhost:25
+# mailroute:
+#  via:  sendmail
 group-items: 1
 date-timezone: Asia/Tokyo
 delicious-username: your-delicious-username
