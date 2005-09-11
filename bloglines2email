@@ -128,7 +128,7 @@ Link: <a href="[% link | html %]">[% link | html %]</a><br />
 [% IF item.description -%]
 [% IF item.description.match('(?i)^<p[ >]') %][% item.description %][% ELSE %]<div style="padding: 1em 0">[% item.description %]</div>[% END %]
 [% ELSE %]<br />[% END %]
-<div style="font-size:0.8em">[% IF item.pubDate %]Posted on [% get_rfc2822_date(item.pubDate) %][% END %] | <a href="[% link | html %]">permalink</a> | <a href="[% feed.link | html %]">[% feed.title | html %]</a>[% var = 'delicious-username'; IF cfg.$var %] | <a href="http://del.icio.us/[% cfg.$var %]?v=3&amp;url=[% item.link | html %]&amp;title=[% item.title | html %]">Post to del.icio.us</a>[% END %]<br clear="all" /></div>
+<div style="font-size:0.8em">[% IF item.pubDate %]Posted on [% get_rfc2822_date(item.pubDate) %][% END %] | <a href="[% link | html %]">permalink</a> | <a href="[% feed.link | html %]">[% feed.title | html %]</a>[% var = 'delicious-username'; IF cfg.$var %] | <a href="http://del.icio.us/[% cfg.$var %]?v=3&amp;url=[% item.link | html %]&amp;title=[% feed.title _ ": " _ item.title | html %]">Post to del.icio.us</a>[% END %]<br clear="all" /></div>
 </div>
 HTML
 }
