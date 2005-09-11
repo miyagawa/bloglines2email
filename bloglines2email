@@ -71,7 +71,7 @@ sub send_email_item {
     my($cfg, $feed, $item) = @_;
     my $subject = $item->{title} || '(no-title)';
     my $body    = format_body($feed, $item, $cfg);
-    do_send_email($cfg, $feed, $subject, $body);
+    do_send_mail($cfg, $feed, $subject, $body);
 }
 
 sub do_send_mail {
