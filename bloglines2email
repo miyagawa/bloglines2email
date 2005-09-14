@@ -112,7 +112,8 @@ sub format_body {
         item => $item,
         cfg  => $cfg,
         get_rfc2822_date => sub { get_rfc2822_date($cfg, @_) },
-    }, \my $out);
+        utf8 => sub { encode("utf-8", $_[0]) }
+    }, \my $out) or die $tt->error;
     $out;
 }
 
@@ -128,7 +129,7 @@ Link: <a href="[% link | html %]">[% link | html %]</a><br />
 [% IF item.description -%]
 [% IF item.description.match('(?i)^<p[ >]') %][% item.description %][% ELSE %]<div style="padding: 1em 0">[% item.description %]</div>[% END %]
 [% ELSE %]<br />[% END %]
-<div style="font-size:0.8em">[% IF item.pubDate %]Posted on [% get_rfc2822_date(item.pubDate) %][% END %] | <a href="[% link | html %]">permalink</a> | <a href="[% feed.link | html %]">[% feed.title | html %]</a>[% var = 'delicious-username'; IF cfg.$var %] | <a href="http://del.icio.us/[% cfg.$var %]?v=3&amp;url=[% item.link | html %]&amp;title=[% feed.title _ ": " _ item.title | html %]">Post to del.icio.us</a>[% END %]<br clear="all" /></div>
+<div style="font-size:0.8em">[% IF item.pubDate %]Posted on [% get_rfc2822_date(item.pubDate) %][% END %] | <a href="[% link | html %]">permalink</a> | <a href="[% feed.link | html %]">[% feed.title | html %]</a>[% var = 'delicious-username'; IF cfg.$var %][% SET u = "http://del.icio.us/" _ cfg.$var; USE delicious = url(u) %] | <a href="[% SET t = feed.title _ ": " _ item.title; delicious(v=3, url=item.link, title=utf8(t)) %]">Post to del.icio.us</a>[% END %]<br clear="all" /></div>
 </div>
 HTML
 }
