@@ -90,7 +90,7 @@ sub do_send_mail {
         Type => 'text/html; charset=utf-8',
         Data => encode("utf-8", $body),
     );
-    $msg->send("smtp", "localhost", Timeout => 60)
+    $msg->send();
 }
 
 sub get_rfc2822_date {
